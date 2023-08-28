@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 	"reflect"
 )
 
@@ -44,25 +45,37 @@ func NewGormGenericRepository[EntityIDType comparable, EntityType interfaces.IEn
 	return repo
 }
 
+func reflectSetUUIDForSchemeField(fieldScheme *schema.Field, ctx context.Context, value reflect.Value) {
+	idAlreadySet := false
+	if fieldValue, isZero := fieldScheme.ValueOf(ctx, value); isZero {
+		if id, ok := fieldValue.(uuid.UUID); ok {
+			if id != uuid.Nil {
+				idAlreadySet = true
+			}
+		}
+	}
+	if !idAlreadySet {
+		err := fieldScheme.Set(ctx, value, uuid.New())
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 // BeforeCreate hook with uuid.UUID id set
 func (g *GormGenericRepository[EntityIDType, EntityType]) beforeCreate(db *gorm.DB) {
 	if db.Statement.Schema != nil {
 		idField := db.Statement.Schema.PrioritizedPrimaryField
 		switch idField.FieldType {
 		case reflect.TypeOf(uuid.UUID{}):
-			idAlreadySet := false
-			if fieldValue, isZero := idField.ValueOf(db.Statement.Context, db.Statement.ReflectValue); isZero {
-				if id, ok := fieldValue.(uuid.UUID); ok {
-					if id != uuid.Nil {
-						idAlreadySet = true
-					}
+			switch db.Statement.ReflectValue.Kind() {
+			case reflect.Slice, reflect.Array:
+				for i := 0; i < db.Statement.ReflectValue.Len(); i++ {
+					refVal := db.Statement.ReflectValue.Index(i)
+					reflectSetUUIDForSchemeField(idField, db.Statement.Context, refVal)
 				}
-			}
-			if !idAlreadySet {
-				err := idField.Set(db.Statement.Context, db.Statement.ReflectValue, uuid.New())
-				if err != nil {
-					panic(err)
-				}
+			default:
+				reflectSetUUIDForSchemeField(idField, db.Statement.Context, db.Statement.ReflectValue)
 			}
 		}
 	}
