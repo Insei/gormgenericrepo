@@ -10,7 +10,7 @@ import (
 
 func reflectSetUUIDForSchemeField(fieldScheme *schema.Field, ctx context.Context, value reflect.Value) {
 	idAlreadySet := false
-	if fieldValue, isZero := fieldScheme.ValueOf(ctx, value); isZero {
+	if fieldValue, isZero := fieldScheme.ValueOf(ctx, value); !isZero {
 		if id, ok := fieldValue.(uuid.UUID); ok {
 			if id != uuid.Nil {
 				idAlreadySet = true
