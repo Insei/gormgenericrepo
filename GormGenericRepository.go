@@ -68,6 +68,14 @@ func NewGormGenericRepository[EntityIDType comparable, EntityType interfaces.IEn
 	return repo
 }
 
+func (g *GormGenericRepository[EntityIDType, EntityType]) newEntityWithID(id EntityIDType) EntityType {
+	entity := new(EntityType)
+	reflectEntityValue := reflect.ValueOf(entity).Elem()
+	idValue := reflectEntityValue.FieldByName("ID")
+	idValue.Set(reflect.ValueOf(id))
+	return *entity
+}
+
 func (g *GormGenericRepository[EntityIDType, EntityType]) DB() *gorm.DB {
 	db := g.db.Session(g.session).Model(g.model)
 	if g.session.FullSaveAssociations {
@@ -316,12 +324,12 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) Update(ctx context.Con
 		}
 		err := tx.Model(&entity).Select(clause.Associations).Updates(&entity).Error
 		if err != nil {
-			return errors.Internal.Wrapf(err, "failed to update entity with id: %s", entity.GetID())
+			return errors.Internal.Wrapf(err, "failed to update entity with id: %s", fmt.Sprint(entity.GetID()))
 		}
 		return nil
 	})
 	if err != nil {
-		return *new(EntityType), errors.Internal.Wrapf(err, "failed to commit changes for entity with id: %s", entity.GetID())
+		return *new(EntityType), errors.Internal.Wrapf(err, "failed to commit changes for entity with id: %s", fmt.Sprint(entity.GetID()))
 	}
 	return entity, nil
 }
@@ -361,13 +369,19 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) Delete(ctx context.Con
 	if !exist {
 		return errors.NotFound.New("entity not found in database")
 	}
-	entity := new(EntityType)
-	err = g.DB().Unscoped().Select(clause.Associations).Unscoped().Delete(entity, id).Error
+	err = g.DB().Transaction(func(tx *gorm.DB) error {
+		// for remove entity with associations, we need to setup id for model
+		entity := g.newEntityWithID(id)
+		for _, association := range g.associations {
+			err := tx.Model(&entity).Unscoped().Association(association).Unscoped().Clear()
+			if err != nil {
+				return errors.Internal.Wrapf(err, "failed to remove %s associations", association)
+			}
+		}
+		return tx.Delete(entity, id).Error
+	})
 	if err != nil {
-		return errors.Internal.Wrap(err, "error replace")
-	}
-	if err != nil {
-		return errors.Internal.Wrap(err, "gorm failed delete entity")
+		return errors.Internal.Wrapf(err, "gorm failed delete entity with id %s:", fmt.Sprint(id))
 	}
 	return nil
 }
