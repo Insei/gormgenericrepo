@@ -10,20 +10,20 @@ import (
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
-//ToSnakeCase converts camelCase field name to snake_case
+// ToSnakeCase converts camelCase field name to snake_case
 func ToSnakeCase(str string) string {
 	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
 	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
 	return strings.ToLower(snake)
 }
 
-//GormQueryBuilder query builder struct for gorm
+// GormQueryBuilder query builder struct for gorm
 type GormQueryBuilder struct {
 	QueryString string
 	Values      []interface{}
 }
 
-//NewGormQueryBuilder Gets new query builder instance
+// NewGormQueryBuilder Gets new query builder instance
 func NewGormQueryBuilder() *GormQueryBuilder {
 	return &GormQueryBuilder{}
 }
@@ -79,50 +79,54 @@ func (g *GormQueryBuilder) addQueryBuilder(condition string, builder interfaces.
 	return g
 }
 
-//Where add new AND condition to the query
-//Params
-//	fieldName - name of the field
-//	comparator - comparison logical operator
-//	value - value of the field
-//Return
-//	interfaces.IQueryBuilder - updated query builder
+// Where add new AND condition to the query
+// Params
+//   - fieldName - name of the field
+//   - comparator - comparison logical operator
+//   - value - value of the field
+//
+// Return
+//   - interfaces.IQueryBuilder - updated query builder
 func (g *GormQueryBuilder) Where(fieldName, comparator string, value interface{}) interfaces.IQueryBuilder {
 	return g.addQuery("AND", fieldName, comparator, value)
 }
 
-//WhereQuery add new complicated AND condition to the query based on another query
-//Params
-//	interfaces.IQueryBuilder - a ready-builder to the query
-//Return
-//	interfaces.IQueryBuilder - updated query builder
+// WhereQuery add new complicated AND condition to the query based on another query
+// Params
+//   - interfaces.IQueryBuilder - a ready-builder to the query
+//
+// Return
+//   - interfaces.IQueryBuilder - updated query builder
 func (g *GormQueryBuilder) WhereQuery(builder interfaces.IQueryBuilder) interfaces.IQueryBuilder {
 	return g.addQueryBuilder("AND", builder)
 }
 
-//Or add new OR condition to the query
-//Params
-//	fieldName - name of the field
-//	comparator - comparison logical operator
-//	value - value of the field
-//Return
-//	interfaces.IQueryBuilder - updated query builder
+// Or add new OR condition to the query
+// Params
+//   - fieldName - name of the field
+//   - comparator - comparison logical operator
+//   - value - value of the field
+//
+// Return
+//   - interfaces.IQueryBuilder - updated query builder
 func (g *GormQueryBuilder) Or(fieldName, comparator string, value interface{}) interfaces.IQueryBuilder {
 	return g.addQuery("OR", fieldName, comparator, value)
 }
 
-//OrQuery add new complicated OR condition to the query based on another query
-//Params
-//	interfaces.IQueryBuilder - a ready-builder to the query
-//Return
-//	interfaces.IQueryBuilder - updated query builder
+// OrQuery add new complicated OR condition to the query based on another query
+// Params
+//   - interfaces.IQueryBuilder - a ready-builder to the query
+//
+// Return
+//   - interfaces.IQueryBuilder - updated query builder
 func (g *GormQueryBuilder) OrQuery(builder interfaces.IQueryBuilder) interfaces.IQueryBuilder {
 	return g.addQueryBuilder("OR", builder)
 }
 
-//Build build a slice of query arguments
-//Return
-//	interface{} - slice of interface{}
-//	error - if error occurs return error, otherwise nil
+// Build build a slice of query arguments
+// Return
+//   - interface{} - slice of interface{}
+//   - error - if error occurs return error, otherwise nil
 func (g *GormQueryBuilder) Build() (interface{}, error) {
 	arr := make([]interface{}, 0)
 	if len(g.QueryString) > 1 {

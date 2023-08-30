@@ -13,7 +13,7 @@ import (
 	"reflect"
 )
 
-//GormGenericRepository is implementation of interfaces.IGenericRepository
+// GormGenericRepository is implementation of interfaces.IGenericRepository
 type GormGenericRepository[EntityIDType comparable, EntityType interfaces.IEntity[EntityIDType]] struct {
 	//Db - gorm database
 	Db *gorm.DB
@@ -23,13 +23,14 @@ type GormGenericRepository[EntityIDType comparable, EntityType interfaces.IEntit
 	logSourceName string
 }
 
-//NewGormGenericRepository GORM generic repository constructor
+// NewGormGenericRepository GORM generic repository constructor
 //
-//Params
-//	*gorm.DB - gorm database
-//	*logrus.Logger - logrus logger
-//Return
-//	*GormGenericRepository[EntityType] - repository for instantiated entity
+// Params
+//   - *gorm.DB - gorm database
+//   - *logrus.Logger - logrus logger
+//
+// Return
+//   - *GormGenericRepository[EntityType] - repository for instantiated entity
 func NewGormGenericRepository[EntityIDType comparable, EntityType interfaces.IEntity[EntityIDType]](db *gorm.DB, log *logrus.Logger) *GormGenericRepository[EntityIDType, EntityType] {
 	model := new(EntityType)
 	repo := &GormGenericRepository[EntityIDType, EntityType]{
@@ -64,12 +65,13 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) log(ctx context.Contex
 	}
 }
 
-//NewQueryBuilder gets new query builder
+// NewQueryBuilder gets new query builder
 //
-//Params
-//	ctx - context is used only for logging
-//Return
-//	interfaces.IQueryBuilder - new query builder
+// Params
+//   - ctx - context is used only for logging
+//
+// Return
+//   - interfaces.IQueryBuilder - new query builder
 func (g *GormGenericRepository[EntityIDType, EntityType]) NewQueryBuilder(ctx context.Context) interfaces.IQueryBuilder {
 	g.log(ctx, "debug", "Call method NewQueryBuilder")
 	return NewGormQueryBuilder()
@@ -111,18 +113,19 @@ func generateOrderString(orderBy string, orderDirection string) string {
 	return order
 }
 
-//GetList of elements with filtering and pagination
+// GetList of elements with filtering and pagination
 //
-//Params
-//	ctx - context is used only for logging
-//	orderBy - order by string parameter
-//	orderDirection - ascending or descending order
-//	page - page number
-//	size - page size
-//	queryBuilder - query builder for filtering
-//Return
-//	*[]EntityType - pointer to array of entities
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context is used only for logging
+//   - orderBy - order by string parameter
+//   - orderDirection - ascending or descending order
+//   - page - page number
+//   - size - page size
+//   - queryBuilder - query builder for filtering
+//
+// Return
+//   - []EntityType - pointer to array of entities
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) GetList(ctx context.Context, orderBy string, orderDirection string, page int, size int, queryBuilder interfaces.IQueryBuilder) ([]EntityType, error) {
 	g.log(ctx, "debug", fmt.Sprintf("GetList: IN: orderBy=%s, orderDirection=%s, page=%d, size=%d, queryBuilder=%s", orderBy, orderDirection, page, size, queryBuilder))
 	model := new(EntityType)
@@ -144,15 +147,16 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) GetList(ctx context.Co
 	return entities, nil
 }
 
-//IsExist checks that entity is existed in repository
+// IsExist checks that entity is existed in repository
 //
-//Params
-//	ctx - context is used only for logging
-//	id - id of the entity
-//	queryBuilder - query builder with addition conditions, can be nil
-//Return
-//	bool - true if existed, otherwise false
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context is used only for logging
+//   - id - id of the entity
+//   - queryBuilder - query builder with addition conditions, can be nil
+//
+// Return
+//   - bool - true if existed, otherwise false
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) IsExist(ctx context.Context, id EntityIDType, queryBuilder interfaces.IQueryBuilder) (bool, error) {
 	entity := new(EntityType)
 	gormQuery := g.Db.Model(entity)
@@ -174,14 +178,15 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) IsExist(ctx context.Co
 	return true, nil
 }
 
-//Count gets total count of entities with current query
+// Count gets total count of entities with current query
 //
-//Params
-//	ctx - context
-//	queryBuilder - query builder with conditions
-//Return
-//	int64 - number of entities
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context
+//   - queryBuilder - query builder with conditions
+//
+// Return
+//   - int64 - number of entities
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) Count(ctx context.Context, queryBuilder interfaces.IQueryBuilder) (int, error) {
 	g.log(ctx, "debug", fmt.Sprintf("Count: IN: queryBuilder=%+v", queryBuilder))
 	count := int64(0)
@@ -199,14 +204,15 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) Count(ctx context.Cont
 	return int(count), nil
 }
 
-//GetByID gets entity by ID from repository
+// GetByID gets entity by ID from repository
 //
-//Params
-//	ctx - context
-//	id - entity id
-//Return
-//	EntityType - point to entity
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context
+//   - id - entity id
+//
+// Return
+//   - EntityType - point to entity
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) GetByID(ctx context.Context, id EntityIDType) (EntityType, error) {
 	g.log(ctx, "debug", fmt.Sprintf("GetByID: id=%+v", id))
 	entity := new(EntityType)
@@ -221,15 +227,16 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) GetByID(ctx context.Co
 	return *entity, nil
 }
 
-//GetByIDExtended Get entity by ID and query from repository
+// GetByIDExtended Get entity by ID and query from repository
 //
-//Params
-//	ctx - context
-//	id - entity id
-//	queryBuilder - extended query conditions
-//Return
-//	*EntityType - point to entity
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context
+//   - id - entity id
+//   - queryBuilder - extended query conditions
+//
+// Return
+//   - *EntityType - point to entity
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) GetByIDExtended(ctx context.Context, id EntityIDType, queryBuilder interfaces.IQueryBuilder) (EntityType, error) {
 	g.log(ctx, "debug", fmt.Sprintf("GetByIDExtended: id=%+v, query builder: %s", id, queryBuilder))
 	model := new(EntityType)
@@ -255,14 +262,15 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) GetByIDExtended(ctx co
 	return (*entities)[0], nil
 }
 
-//Update save the changes to the existing entity in the repository
+// Update save the changes to the existing entity in the repository
 //
-//Params
-//	ctx - context
-//	entity - updated entity to save
-//Return
-//	EntityType - updated entity
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context
+//   - entity - updated entity to save
+//
+// Return
+//   - EntityType - updated entity
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) Update(ctx context.Context, entity EntityType) (EntityType, error) {
 	g.log(ctx, "debug", fmt.Sprintf("Update: entity=%+v", entity))
 	err := g.Db.Save(&entity).Error
@@ -275,14 +283,15 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) Update(ctx context.Con
 	return entity, nil
 }
 
-//Insert entity to the repository
+// Insert entity to the repository
 //
-//Params
-//	ctx - context
-//	entity - entity to save
-//Return
-//	EntityType - created entity
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context
+//   - entity - entity to save
+//
+// Return
+//   - EntityType - created entity
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) Insert(ctx context.Context, entity EntityType) (EntityType, error) {
 	g.log(ctx, "debug", fmt.Sprintf("Insert: entity=%+v", entity))
 	if err := g.Db.Create(&entity).Error; err != nil {
@@ -292,13 +301,14 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) Insert(ctx context.Con
 	return entity, nil
 }
 
-//Delete entity from the repository
+// Delete entity from the repository
 //
-//Params
-//	ctx - context
-//	id - entity id
-//Return
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context
+//   - id - entity id
+//
+// Return
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) Delete(ctx context.Context, id EntityIDType) error {
 	g.log(ctx, "debug", fmt.Sprintf("Delete: id=%+v", id))
 	exist, err := g.IsExist(ctx, id, nil)
@@ -317,13 +327,14 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) Delete(ctx context.Con
 	return nil
 }
 
-//DeleteAll entities matching the condition
+// DeleteAll entities matching the condition
 //
-//Params
-//	ctx - context
-//	queryBuilder - query builder with conditions
-//Return
-//	error - if an error occurs, otherwise nil
+// Params
+//   - ctx - context
+//   - queryBuilder - query builder with conditions
+//
+// Return
+//   - error - if an error occurs, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) DeleteAll(ctx context.Context, queryBuilder interfaces.IQueryBuilder) error {
 	g.log(ctx, "debug", fmt.Sprintf("DeleteAll: IN: queryBuilder=%+v", queryBuilder))
 	entity := new(EntityType)
@@ -341,10 +352,10 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) DeleteAll(ctx context.
 	return nil
 }
 
-//Dispose releases all resources
+// Dispose releases all resources
 //
-//Return
-//	error - if an error occurred, otherwise nil
+// Return
+//   - error - if an error occurred, otherwise nil
 func (g *GormGenericRepository[EntityIDType, EntityType]) Dispose() error {
 	sqlDb, err := g.Db.DB()
 	if err != nil {
