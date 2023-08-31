@@ -3,6 +3,7 @@ package gormgenericrepo
 import (
 	"fmt"
 	"github.com/insei/gogenericrepo/interfaces"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -44,8 +45,12 @@ func (g *GormQueryBuilder) addQuery(condition, fieldName, comparator string, val
 		}
 		return g
 	}
-	g.QueryString += fmt.Sprintf("%s %s ?", ToSnakeCase(fieldName), finComparator)
-	g.Values = append(g.Values, value)
+	if comparator == "IN" && reflect.TypeOf(value).Kind() == reflect.String {
+		g.QueryString += fmt.Sprintf("%s %s %s", ToSnakeCase(fieldName), finComparator, value)
+	} else {
+		g.QueryString += fmt.Sprintf("%s %s ?", ToSnakeCase(fieldName), finComparator)
+		g.Values = append(g.Values, value)
+	}
 	return g
 }
 
