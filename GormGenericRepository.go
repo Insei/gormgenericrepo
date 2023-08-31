@@ -378,7 +378,7 @@ func (g *GormGenericRepository[EntityIDType, EntityType]) Delete(ctx context.Con
 				return errors.Internal.Wrapf(err, "failed to remove %s associations", association)
 			}
 		}
-		return tx.Delete(entity, id).Error
+		return tx.Delete(&entity, id).Error
 	})
 	if err != nil {
 		return errors.Internal.Wrapf(err, "gorm failed delete entity with id %s:", fmt.Sprint(id))
