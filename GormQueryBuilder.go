@@ -47,6 +47,9 @@ func (g *GormQueryBuilder) addQuery(condition, fieldName, comparator string, val
 	}
 	if comparator == "IN" && reflect.TypeOf(value).Kind() == reflect.String {
 		g.QueryString += fmt.Sprintf("%s %s %s", ToSnakeCase(fieldName), finComparator, value)
+	} else if reflect.TypeOf(value).Kind() == reflect.String && finComparator == "LIKE" {
+		g.QueryString += fmt.Sprintf("LOWER(%s) %s LOWER(?)", ToSnakeCase(fieldName), finComparator)
+		g.Values = append(g.Values, value)
 	} else {
 		g.QueryString += fmt.Sprintf("%s %s ?", ToSnakeCase(fieldName), finComparator)
 		g.Values = append(g.Values, value)
